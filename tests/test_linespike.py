@@ -12,7 +12,7 @@ class TestLineSpike(TestCase):
         self.titles = 'ASAE\n-------------------------------------------------------'
 
     def test_average_slopes_around_extrema(self):
-        self.assertEqual(self.ls.asae([0, 1, 0], 2), 1)
+        self.assertEqual(self.ls.asae([0, 1, 0], 2), 1.7320508075688772)
 
     def test_average_slopes_around_extrema_astro_data(self):
         print('\nASTRO DATA'.ljust(52) + self.titles)
