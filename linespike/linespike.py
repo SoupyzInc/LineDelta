@@ -3,11 +3,13 @@ import statistics
 
 class LineSpike:
     """
-    A class to hold all methods to perform analysis of a line chart's 'spikiness,' using the LineSpike framework.
+    A class to hold all methods to perform an analysis of a line chart's 'spikiness,' using the LineSpike framework.
 
     Methods
     -------
     asae(self, data, w)
+        Finds the average slopes around all relative extrema of a data set.
+    asae_scaled(self, data, w)
         Finds the average slopes around all relative extrema of a data set converted to z-scores.
     """
 
@@ -21,7 +23,9 @@ class LineSpike:
         data : list of int
             The data set to be analyzed.
         w : int, optional
-            The amount of data points left and right of the extrema to be considered.
+            The amount of data points left and right of the extrema to be considered. A window
+            size of X, will consider X points to the left and X points to the right of an extrema.
+
         Returns
         -------
         int
@@ -75,7 +79,8 @@ class LineSpike:
         data : list of int
             The data set to be analyzed.
         w : int, optional
-            The amount of data points left and right of the extrema to be considered.
+            The amount of data points left and right of the extrema to be considered. A window
+            size of X, will consider X points to the left and X points to the right of an extrema.
 
         Returns
         -------
