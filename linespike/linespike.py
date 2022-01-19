@@ -1,3 +1,5 @@
+import json
+import os
 import statistics
 
 
@@ -13,127 +15,98 @@ class LineSpike:
         Finds the average slopes around all relative extrema of a data set converted to z-scores.
     """
 
-    @staticmethod
-    def asae(data, w=2):
+    data = []
+    C = []
+    E = []
+
+    def setup(self, location):
+        self.get_data(location)
+        self.find_extrema()
+        print(self.E)
+        self.sort_extrema(0, int(len(self.data) / 2))
+        print(self.E)
+        # self.lower_star_filtration()
+        # self.generate_persistence_diagram()
+
+    def get_data(self, location):
         """
-        Finds the average slopes around all relative extrema of a data set.
+        Loads a specified data set.
 
         Parameters
         ----------
-        data : list of int
-            The data set to be analyzed.
-        w : int, optional
-            The amount of data points left and right of the extrema to be considered. A window
-            size of X, will consider X points to the left and X points to the right of an extrema.
-
-        Returns
-        -------
-        int
-            The average slopes of all relative extrema of the data set.
+        location : string
+            The folder name of the data set under tests/data.
         """
 
-        if w < 1:
-            raise ValueError('Window size, w, must be greater than 0.')
+        location = os.getcwd() + '\\data\\' + location
+        for file in os.listdir(location):
+            try:
+                if file.endswith(".json"):
+                    with open(location + '\\' + file) as f:
+                        self.data.append(json.load(f))
+            except Exception as e:
+                raise e
 
-        # Find extrema
-        extrema_indices = []
-        for i in range(1, len(data) - 1):
-            if data[i - 1] > data[i] and data[i] < data[i + 1]:
-                extrema_indices.append(i)
-            elif data[i - 1] < data[i] and data[i] > data[i + 1]:
-                extrema_indices.append(i)
-
-        if len(extrema_indices) == 0:
-            return 0
-
-        # Iterate through all extrema (windows).
-        slope_sum = 0
-        for i in range(0, len(extrema_indices)):
-            # Find slope of window
-            window_sum = 0
-
-            # Set window indices
-            left_bound = extrema_indices[i] - w
-            if left_bound < 0:
-                left_bound = 0
-
-            right_bound = extrema_indices[i] + w
-            if right_bound > len(data) - 1:
-                right_bound = len(data) - 1
-
-            # Sum slopes of window
-            for x in range(left_bound, right_bound):
-                window_sum += abs(data[x + 1] - data[x])
-
-            slope_sum += window_sum / (right_bound - left_bound)
-
-        return slope_sum / len(extrema_indices)
-
-    @staticmethod
-    def asae_scaled(data, w=2):
+    def find_extrema(self):
         """
-        Finds the average slopes around all relative extrema of a data set converted to z-scores.
-
-        Parameters
-        ----------
-        data : list of int
-            The data set to be analyzed.
-        w : int, optional
-            The amount of data points left and right of the extrema to be considered. A window
-            size of X, will consider X points to the left and X points to the right of an extrema.
-
-        Returns
-        -------
-        int
-            The average slopes of all relative extrema of the z-scores of the data set.
+        Finds all local extrema in the data set, including boundaries.
         """
 
-        if w < 1:
-            raise ValueError('Window size, w, must be greater than 0.')
-        if len(data) == 0:
-            raise ValueError('The data set, data, cannot be empty.')
+        self.E.append([self.data[0], 0])
 
-        # Convert data into z-scores
-        mean = statistics.mean(data)
-        sx = statistics.stdev(data)
+        for i in range(1, len(self.data) - 2):
+            if self.data[i-1] < self.data[i] and self.data[i+1] < self.data[i]:  # local max
+                self.E.append([self.data[i], i])
+            elif self.data[i-1] > self.data[i] and self.data[i+1] > self.data[i]:  # local min
+                self.E.append([self.data[i], i])
 
-        scaled_data = []
-        for x in data:
-            if sx != 0:
-                scaled_data.append((x - mean) / sx)
-            else:
-                scaled_data.append(0)
+        self.E.append([self.data[-1], len(self.data) - 1])
 
-        # Find extrema
-        extrema_indices = []
-        for i in range(1, len(scaled_data) - 1):
-            if scaled_data[i - 1] > scaled_data[i] and scaled_data[i] < scaled_data[i + 1]:
-                extrema_indices.append(i)
-            elif scaled_data[i - 1] < scaled_data[i] and scaled_data[i] > scaled_data[i + 1]:
-                extrema_indices.append(i)
+    def partition(self, arr, low, high):
+        i = (low - 1)  # index of smaller element
+        pivot = arr[high]  # pivot
 
-        if len(extrema_indices) == 0:
-            return 0
+        for j in range(low, high):
 
-        # Iterate through all extrema (windows).
-        slope_sum = 0
-        for i in range(0, len(extrema_indices)):
-            # Find slope of window
-            window_sum = 0
+            # If current element is smaller than or
+            # equal to pivot
+            if arr[j] <= pivot:
+                # increment index of smaller element
+                i = i + 1
+                arr[i], arr[j] = arr[j], arr[i]
 
-            # Set window indices
-            left_bound = extrema_indices[i] - w
-            if left_bound < 0:
-                left_bound = 0
+        arr[i + 1], arr[high] = arr[high], arr[i + 1]
+        return i + 1
 
-            right_bound = extrema_indices[i] + w
-            if right_bound > len(scaled_data) - 1:
-                right_bound = len(scaled_data) - 1
+    def sort_extrema(self, low, high):
+        """
+        Sorts extrema in a data set from low to high y-values.
+        """
 
-            # Sum slopes of window
-            for x in range(left_bound, right_bound):
-                window_sum += abs(scaled_data[x + 1] - scaled_data[x])
+        if len(self.data) == 1:
+            return self.data
+        if low < high:
+            # pi is partitioning index, arr[p] is now
+            # at right place
+            pi = self.partition(self.data, low, high)
 
-            slope_sum += window_sum / (right_bound - left_bound)
+            # Separately sort elements before
+            # partition and after partition
+            self.sort_extrema(low, pi - 1)
 
-        return slope_sum / len(extrema_indices)
+    def lower_star_filtration(self):
+        """
+        Implements lower-star filtration on the data set to generate a merge tree and persistence diagram.
+        """
+
+    def generate_persistence_diagram(self):
+        """
+        Generates a persistence diagram from the lower-star filtration.
+        """
+
+def main():
+    ls = LineSpike()
+    ls.setup('astro')
+
+if __name__ == '__main__':
+    main()
