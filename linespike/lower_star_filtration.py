@@ -11,7 +11,7 @@ from ripser import ripser
 from persim import plot_diagrams
 
 
-class LineSpike:
+class LineSpikeFilter:
     """
     A class to hold all methods to perform an analysis of a time series' spikiness, using the LineSpike framework.
 
@@ -225,7 +225,7 @@ class LineSpike:
 
 
 def main():
-    ls = LineSpike()
+    ls = LineSpikeFilter()
     folders = ['astro', 'chi_homicide', 'climate_awnd', 'climate_prcp', 'climate_tmax',
                     'eeg_10000', 'eeg_2500', 'eeg_500', 'flights', 'nz_tourist',
                     'stock_price', 'stock_volume', 'unemployment']
