@@ -244,37 +244,53 @@ class LineSpikeDistance:
         # plt.savefig(self.file_output_name)
         # plt.close()
 
-
-    def generate_persistence_diagram(self):
-        """
-        Generates a persistence diagram from the lower-star filtration.
-        """
-
-
-
-
 def main():
     ls = LineSpikeDistance()
-    folders = ['astro', 'chi_homicide', 'climate_awnd', 'climate_prcp', 'climate_tmax',
-                    'eeg_10000', 'eeg_2500', 'eeg_500', 'flights', 'nz_tourist',
-                    'stock_price', 'stock_volume', 'unemployment']
 
-    # ls.compare('stock_price', 'aapl_price', 'stock_volume', 'aapl_volume')
-    # print('500 vs 2500')
-    # print(ls.compare('eeg_500', '05_500', 'eeg_2500', '05_2500'))
-    #
-    # print('500 vs 10000')
-    # print(ls.compare('eeg_500', '05_500', 'eeg_10000', '05_10000'))
+    print('500 -----------')
+    print('1 v 2: ' + str(ls.compare('eeg_500', '05_500', 'eeg_500', '10_500')))
+    print('1 v 3: ' + str(ls.compare('eeg_500', '05_500', 'eeg_500', '15_500')))
+    print('1 v 4: ' + str(ls.compare('eeg_500', '05_500', 'eeg_500', '20_500')))
+    print('1 v 5: ' + str(ls.compare('eeg_500', '05_500', 'eeg_500', '25_500')))
+    print('1 v 6: ' + str(ls.compare('eeg_500', '05_500', 'eeg_500', '30_500')))
 
-    print('2500 vs 10000')
-    print(ls.compare('eeg_2500', '05_2500', 'eeg_10000', '05_10000'))
+    print('2500 -----------')
+    print('1 v 2: ' + str(ls.compare('eeg_2500', '05_2500', 'eeg_2500', '10_2500')))
+    print('1 v 3: ' + str(ls.compare('eeg_2500', '05_2500', 'eeg_2500', '15_2500')))
+    print('1 v 4: ' + str(ls.compare('eeg_2500', '05_2500', 'eeg_2500', '20_2500')))
+    print('1 v 5: ' + str(ls.compare('eeg_2500', '05_2500', 'eeg_2500', '25_2500')))
+    print('1 v 6: ' + str(ls.compare('eeg_2500', '05_2500', 'eeg_2500', '30_2500')))
 
-    # for folder in folders:
-    #     ls.setup(folder)
+    print('10000 -----------')
+    print('1 v 2: ' + str(ls.compare('eeg_10000', '05_10000', 'eeg_10000', '10_10000')))
+    print('1 v 3: ' + str(ls.compare('eeg_10000', '05_10000', 'eeg_10000', '15_10000')))
+    print('1 v 4: ' + str(ls.compare('eeg_10000', '05_10000', 'eeg_10000', '20_10000')))
+    print('1 v 5: ' + str(ls.compare('eeg_10000', '05_10000', 'eeg_10000', '25_10000')))
+    print('1 v 6: ' + str(ls.compare('eeg_10000', '05_10000', 'eeg_10000', '30_10000')))
 
-    # ls.setup('stock_volume', 'aapl_volume')
-    # ls.setup('stock_price', 'aapl_price')
-    # ls.setup('lines', 'equals_1')
+    print('05 -----------')
+    print('X v Y: ' + str(ls.compare('eeg_500', '05_500', 'eeg_2500', '05_2500')))
+    print('X v Z: ' + str(ls.compare('eeg_500', '05_500', 'eeg_10000', '05_10000')))
+
+    print('10 -----------')
+    print('X v Y: ' + str(ls.compare('eeg_500', '10_500', 'eeg_2500', '10_2500')))
+    print('X v Z: ' + str(ls.compare('eeg_500', '10_500', 'eeg_10000', '10_10000')))
+
+    print('15 -----------')
+    print('X v Y: ' + str(ls.compare('eeg_500', '15_500', 'eeg_2500', '15_2500')))
+    print('X v Z: ' + str(ls.compare('eeg_500', '15_500', 'eeg_10000', '15_10000')))
+
+    print('20 -----------')
+    print('X v Y: ' + str(ls.compare('eeg_500', '20_500', 'eeg_2500', '20_2500')))
+    print('X v Z: ' + str(ls.compare('eeg_500', '20_500', 'eeg_10000', '20_10000')))
+
+    print('25 -----------')
+    print('X v Y: ' + str(ls.compare('eeg_500', '25_500', 'eeg_2500', '25_2500')))
+    print('X v Z: ' + str(ls.compare('eeg_500', '25_500', 'eeg_10000', '25_10000')))
+
+    print('30 -----------')
+    print('X v Y: ' + str(ls.compare('eeg_500', '30_500', 'eeg_2500', '30_2500')))
+    print('X v Z: ' + str(ls.compare('eeg_500', '30_500', 'eeg_10000', '30_10000')))
 
 
 if __name__ == '__main__':
