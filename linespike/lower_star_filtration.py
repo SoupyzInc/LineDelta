@@ -37,6 +37,7 @@ class LineSpikeFilter:
     extrema = []
     C = []
     file_output_name = ''
+    file_name = ''
 
     def setup(self, location):
         # Load data
@@ -96,7 +97,8 @@ class LineSpikeFilter:
             try:
                 if file.endswith(".json"):
                     print('Working on: ' + file + ' --------------------')
-                    self.file_output_name = 'imgs/' + folder + ' - ' + file[0:len(file)-5] + '.png'
+                    self.file_output_name = folder + '/' + folder + ' - ' + file[0:len(file)-5] + '.png'
+                    self.file_name = file[0:len(file)-5]
                     print(self.file_output_name)
                     with open(location + '\\' + file) as f:
                         self.data.append(json.load(f))
@@ -185,11 +187,11 @@ class LineSpikeFilter:
         D = sparse.coo_matrix((V, (I, J)), shape=(N, N)).tocsr()
         dgm0 = ripser(D, maxdim=0, distance_matrix=True)['dgms'][0]
         dgm0 = dgm0[dgm0[:, 1] - dgm0[:, 0] > 1e-3, :]
-        allgrid = np.unique(dgm0.flatten())
-        allgrid = allgrid[allgrid < np.inf]
-        xs = np.unique(dgm0[:, 0])
-        ys = np.unique(dgm0[:, 1])
-        ys = ys[ys < np.inf]
+        # allgrid = np.unique(dgm0.flatten())
+        # allgrid = allgrid[allgrid < np.inf]
+        # xs = np.unique(dgm0[:, 0])
+        # ys = np.unique(dgm0[:, 1])
+        # ys = ys[ys < np.inf]
 
         # Plot the time series and the persistence diagram
         plt.figure(figsize=(12, 6))
@@ -197,20 +199,23 @@ class LineSpikeFilter:
         # ylims = [-1, 6.5]
         plt.subplot(121)
         plt.plot(t, x)
-        ax = plt.gca()
-        ax.set_yticks(allgrid)
-        ax.set_xticks([])
+        # ax = plt.gca()
+        # ax.set_yticks(allgrid)
+        # ax.set_xticks([])
+        plt.locator_params(axis="x", nbins=10)
+        plt.locator_params(axis="y", nbins=10)
         plt.ylim(ylims)
-        # plt.grid(linewidth=1, linestyle='--')
-        plt.title("Data")
-        plt.xlabel("t")
+        plt.grid(linewidth=1, linestyle='--')
+        plt.title(self.file_name)
 
         plt.subplot(122)
-        ax = plt.gca()
-        ax.set_yticks(ys)
-        ax.set_xticks(xs)
+        # ax = plt.gca()
+        # ax.set_yticks(ys)
+        # ax.set_xticks(xs)
+        plt.locator_params(axis="x", nbins=10)
+        plt.locator_params(axis="y", nbins=10)
         plt.ylim(ylims)
-        # plt.grid(linewidth=1, linestyle='--')
+        plt.grid(linewidth=1, linestyle='--')
         plot_diagrams(dgm0, size=50)
         plt.title("Persistence Diagram")
 
@@ -230,8 +235,10 @@ def main():
                     'eeg_10000', 'eeg_2500', 'eeg_500', 'flights', 'nz_tourist',
                     'stock_price', 'stock_volume', 'unemployment']
 
-    for folder in folders:
-        ls.setup(folder)
+    # for folder in folders:
+    #     ls.setup(folder)
+
+    ls.setup('eeg_10000')
 
     # ls.setup('stock_volume', 'aapl_volume')
     # ls.setup('stock_price', 'aapl_price')
