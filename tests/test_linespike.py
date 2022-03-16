@@ -295,3 +295,4 @@ class TestLineSpike(TestCase):
 
         # function to show the plot
         plt.show()
+
