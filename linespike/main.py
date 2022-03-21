@@ -27,7 +27,7 @@ def load_data_file(folder, file_name):
         except Exception as e:
             raise e
 
-    return opened_data[0]
+    return opened_data[0][0:140]
 
 
 def circle_union(x1, y1, x2, y2, r):
@@ -58,22 +58,30 @@ def circle_union(x1, y1, x2, y2, r):
 
 
 class LineDelta:
+    y_diff_mean = 0
+
     def __init__(self, graph, folder, file_name):
         self.data = load_data_file(folder, file_name)  # Load data into memory.
         self.graph = graph  # Display graph?
 
-    def __tccc_creation(self):
+    # -------------
+    # | FEATURE 1 |
+    # -------------
+
+    def occ(self):
         # Generate radius value.
-        # Needs to be > 1 (distance b/w points next to each other) otherwise only same y-values will touch.
+        # ----------------------
         y_diffs = []
         for i in range(0, len(self.data) - 2):
             y_diffs.append(abs(self.data[i + 1] - self.data[i]))
 
         quartiles = statistics.quantiles(y_diffs)
-        r = quartiles[1]  # Median of y_diffs
+        print(quartiles)
+        self.y_diff_mean = quartiles[1]
+        r = quartiles[1]  # Q1 of y_diffs
 
         # Get extrema of data.
-        # ====================
+        # --------------------
         extrema = [[1, self.data[0]]]  # [index of extrema (x), value of extrema (y)]
 
         for i in range(1, len(self.data) - 2):
@@ -84,9 +92,9 @@ class LineDelta:
 
         extrema.append([len(self.data), self.data[-1]])
 
-        # Perform point cloud filtration via reduction of Cech complex.
-        # =============================================================
-        extrema_ranges = []
+        # Find OCC.
+        # ---------
+        ordered_cech_complex = []
         i = 0
         while i < len(extrema) - 2:  # Iterate through extrema, where the circles are.
             start_extrema = extrema[i]  # First extrema (circle) of chain.
@@ -94,7 +102,8 @@ class LineDelta:
             for k in range(i, len(extrema) - 2):  # Iterate until complex chain is broken.
                 c = 0  # Offset.
                 d = 1  # Length of chain.
-                if circle_union(extrema[k + c][0], extrema[k + c][1], extrema[k + d][0], extrema[k + d][1], r):
+                if circle_union(extrema[k + c][0] * self.y_diff_mean, extrema[k + c][1],
+                                extrema[k + d][0] * self.y_diff_mean, extrema[k + d][1], r):
                     # Adjacent extrema has union, continue search with next extrema.
                     end_extrema = extrema[k + d]
                     c += 1
@@ -105,102 +114,105 @@ class LineDelta:
 
                 i = k + c  # Continue to search at extrema after found chain.
             if start_extrema != end_extrema:
-                extrema_ranges.append([start_extrema, end_extrema])
+                ordered_cech_complex.append([start_extrema, end_extrema])
             i += 1
 
         # Generate circles.
-        # =================
+        # -----------------
         fig, ax = plt.subplots()
 
         if self.graph:
             for e in extrema:
-                circle = plt.Circle((e[0], e[1]), r, color='r', alpha=0.5)
+                circle = plt.Circle((e[0] * self.y_diff_mean, e[1]), r, color='r', alpha=0.3)
                 ax.add_patch(circle)
 
         # Generate rectangles.
-        # ====================
+        # --------------------
         if self.graph:
-            for extrema_pair in extrema_ranges:
-                xy = (extrema_pair[0][0], extrema_pair[0][1])
-                width = abs(extrema_pair[1][0] - extrema_pair[0][0])
+            for extrema_pair in ordered_cech_complex:
+                xy = (extrema_pair[0][0] * self.y_diff_mean, extrema_pair[0][1])
+                width = abs((extrema_pair[1][0] * self.y_diff_mean) - (extrema_pair[0][0] * self.y_diff_mean))
                 height = extrema_pair[1][1] - extrema_pair[0][1]
                 rectangle = plt.Rectangle(xy, width, height, color='g', alpha=0.5)
                 ax.add_patch(rectangle)
 
         # Show complex.
-        # =============
+        # -------------
         if self.graph:
-            N = len(self.data)  # The number of points
             t = []
             for i in range(1, len(self.data) + 1):
                 t.append(i)
+
+            for i in range(0, len(t)):
+                t[i] = t[i] * self.y_diff_mean
+
             ax.plot(t, self.data)
+            # ax.axes.xaxis.set_ticklabels([])
+            plt.title(f'$OC^r(P)$ of AAPL Stock Volume | r = {r}')
+            plt.ylim(0.1e8, 1.6e8)
+            plt.xlim(-7e7, 1.6e9)
+            plt.xlabel('Time')
+            plt.ylabel('Stock Volume')
+            plt.grid(True)
             plt.show()
             plt.close()
 
-        return extrema_ranges
+        return ordered_cech_complex
 
-    def __tccc_filtration(self):
-        # Generate radius value.
-        # Needs to be > 1 (distance b/w points next to each other) otherwise only same y-values will touch.
-        y_diffs = []
-        for i in range(0, len(self.data) - 2):
-            y_diffs.append(abs(self.data[i + 1] - self.data[i]))
-
-        quartiles = statistics.quantiles(y_diffs)
-        r = quartiles[1]  # Median of y_diffs
-
-        # Get extrema of data.
-        # ====================
-        extrema = [[1, self.data[0]]]  # [index of extrema (x), value of extrema (y)]
-
-        for i in range(1, len(self.data) - 2):
-            if self.data[i - 1] < self.data[i] and self.data[i + 1] < self.data[i]:  # local max
-                extrema.append([i + 1, self.data[i]])
-            elif self.data[i - 1] > self.data[i] and self.data[i + 1] > self.data[i]:  # local min
-                extrema.append([i + 1, self.data[i]])
-
-        extrema.append([len(self.data), self.data[-1]])
-
-        # Perform point cloud filtration via reduction of Cech complex.
-        # =============================================================
-        extrema_ranges = []
-        i = 0
-        while i < len(extrema) - 2:  # Iterate through extrema, where the circles are.
-            start_extrema = extrema[i]  # First extrema (circle) of chain.
-            end_extrema = extrema[i]
-            for k in range(i, len(extrema) - 2):  # Iterate until complex chain is broken.
-                c = 0  # Offset.
-                d = 1  # Length of chain.
-                if circle_union(extrema[k + c][0], extrema[k + c][1], extrema[k + d][0], extrema[k + d][1], r):
-                    # Adjacent extrema has union, continue search with next extrema.
-                    end_extrema = extrema[k + d]
-                    c += 1
-                    d += 1
-                else:
-                    # Adjacent extrema has no union, chain has ended.
-                    break
-
-                i = k + c  # Continue to search at extrema after found chain.
-            if start_extrema != end_extrema:
-                extrema_ranges.append([start_extrema, end_extrema])
-            i += 1
-
+    def occs(self, ordered_cech_complex):
         fig, ax = plt.subplots()
 
         # Generate noise-reduced data.
-        # ============================
+        # ----------------------------
         noise_reduced_data = self.data
-        for extrema_pair in extrema_ranges:
-            for i in range(extrema_pair[0][0] - 1, extrema_pair[1][0]):
-                noise_reduced_data[i] = extrema_pair[0][1]
+
+        for extrema_pair in ordered_cech_complex:
+            x1 = extrema_pair[0][0]
+            y1 = extrema_pair[0][1]
+            xn = extrema_pair[1][0]
+            yn = extrema_pair[1][1]
+            n = xn - x1 + 1
+            m = (yn - y1) / n
+
+            if n == 2:  # 2-ordered Cech complex
+                noise_reduced_data[xn - 1] = y1
+
+                if self.graph:
+                    xy = (x1 * self.y_diff_mean, y1 - 0.5)
+                    width = xn * self.y_diff_mean - x1 * self.y_diff_mean
+                    height = 1
+                    rectangle = plt.Rectangle(xy, width, height, color='g', alpha=0.5)
+                    ax.add_patch(rectangle)
+            else:  # (>2)-ordered Cech complex
+                # Replace intermediate values with line segment between p1 and pn
+                for i in range(x1 + 1, xn + 1):
+                    noise_reduced_data[i - 1] = (m * i) + (-(m * x1) + y1)
+
+                if self.graph:
+                    xy = (x1 * self.y_diff_mean, y1)
+                    width = xn * self.y_diff_mean - x1 * self.y_diff_mean
+                    height = yn - y1
+                    rectangle = plt.Rectangle(xy, width, height, color='g', alpha=0.5)
+                    ax.add_patch(rectangle)
 
         if self.graph:
             t = []
-            for i in range(1, len(noise_reduced_data) + 1):
+            for i in range(1, len(self.data) + 1):
                 t.append(i)
-                ax.plot(t, noise_reduced_data)
-                plt.show()
+
+            for i in range(0, len(t)):
+                t[i] = t[i] * self.y_diff_mean
+
+            ax.plot(t, noise_reduced_data)
+            # ax.axes.xaxis.set_ticklabels([])
+            plt.title('$OC^r(P)$ Substitution of AAPL Stock Volume')
+            plt.xlabel('Time')
+            plt.ylabel('Stock Volume')
+            plt.ylim(0.1e8, 1.6e8)
+            plt.xlim(-7e7, 1.6e9)
+            plt.grid(True)
+            plt.show()
+            plt.close()
 
         return noise_reduced_data
 
@@ -210,9 +222,10 @@ def main():
     #            'eeg_10000', 'eeg_2500', 'eeg_500', 'flights', 'nz_tourist',
     #            'stock_price', 'stock_volume', 'unemployment']
 
-    ls = LineDelta(True, 'stock_price', 'aapl_price')
-    ls.tccc_creation()
-    ls.tccc_filtration()
+    # ls = LineDelta(True, 'stock_price', 'aapl_price')
+    ls = LineDelta(True, 'stock_volume', 'aapl_volume')
+    occ = ls.occ()
+    ls.occs(occ)
 
 
 if __name__ == '__main__':
